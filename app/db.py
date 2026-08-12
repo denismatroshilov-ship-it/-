@@ -25,6 +25,20 @@ CREATE TABLE IF NOT EXISTS items (
 CREATE INDEX IF NOT EXISTS idx_items_status ON items(status);
 """
 
+# Колонки, добавленные после первой версии схемы: на старой БД доливаем ALTER'ом.
+MIGRATIONS = {
+    "kind": "TEXT NOT NULL DEFAULT 'generated'",
+    "source_path": "TEXT",
+    "span": "TEXT",
+    "hook_text": "TEXT NOT NULL DEFAULT ''",
+    "local_path": "TEXT",
+}
+
+
+class Kind(StrEnum):
+    GENERATED = "generated"  # ролик из text→video
+    CLIP = "clip"            # нарезка момента из фильма
+
 
 class Status(StrEnum):
     NEW = "new"                # добавлено, видео ещё не сгенерировано
@@ -47,6 +61,11 @@ class Item:
     tg_message_id: int | None
     tiktok_job_id: str | None
     error: str | None
+    kind: Kind = Kind.GENERATED
+    source_path: str | None = None
+    span: str | None = None
+    hook_text: str = ""
+    local_path: str | None = None
 
     @classmethod
     def from_row(cls, row: aiosqlite.Row) -> "Item":
@@ -59,6 +78,11 @@ class Item:
             tg_message_id=row["tg_message_id"],
             tiktok_job_id=row["tiktok_job_id"],
             error=row["error"],
+            kind=Kind(row["kind"]),
+            source_path=row["source_path"],
+            span=row["span"],
+            hook_text=row["hook_text"],
+            local_path=row["local_path"],
         )
 
 
@@ -78,6 +102,13 @@ class Queue:
         os.makedirs(directory, exist_ok=True)
         async with self._connect() as db:
             await db.executescript(SCHEMA)
+            async with db.execute("PRAGMA table_info(items)") as cur:
+                existing = {row["name"] for row in await cur.fetchall()}
+            for column, definition in MIGRATIONS.items():
+                if column not in existing:
+                    await db.execute(
+                        f"ALTER TABLE items ADD COLUMN {column} {definition}"
+                    )
             await db.commit()
 
     @asynccontextmanager
@@ -86,12 +117,25 @@ class Queue:
             conn.row_factory = aiosqlite.Row
             yield conn
 
-    async def add(self, prompt: str, caption: str = "") -> int:
+    async def add(
+        self,
+        prompt: str,
+        caption: str = "",
+        *,
+        kind: Kind = Kind.GENERATED,
+        source_path: str | None = None,
+        span: str | None = None,
+        hook_text: str = "",
+    ) -> int:
         async with self._connect() as db:
             cursor = await db.execute(
-                "INSERT INTO items (prompt, caption, status, created_at, updated_at)"
-                " VALUES (?, ?, ?, ?, ?)",
-                (prompt, caption, Status.NEW, _now(), _now()),
+                "INSERT INTO items (prompt, caption, status, kind, source_path, span,"
+                " hook_text, created_at, updated_at)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    prompt, caption, Status.NEW, kind, source_path, span,
+                    hook_text, _now(), _now(),
+                ),
             )
             await db.commit()
             return int(cursor.lastrowid)
@@ -130,6 +174,8 @@ class Queue:
             "tg_message_id",
             "tiktok_job_id",
             "error",
+            "hook_text",
+            "local_path",
         }
         unknown = set(fields) - allowed
         if unknown:

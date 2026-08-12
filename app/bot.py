@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.filters import Command, CommandObject
 from aiogram.types import CallbackQuery, Message
 
+from app.clipper import ClipError, parse_span
 from app.config import Settings
-from app.db import Queue, Status
+from app.db import Kind, Queue, Status
 from app.pipeline import Pipeline
+from app.playbook import Brief, build_brief, suggest_hooks, validate
 from app.providers.higgsfield import HiggsfieldClient, HiggsfieldError
 
 log = logging.getLogger(__name__)
@@ -17,6 +20,8 @@ router = Router()
 
 HELP = (
     "Команды:\n"
+    "/hooks <сцена> — 5 вариантов сценария под сцену\n"
+    "/clip <файл> <12:30-12:58> <хук> — нарезать момент из фильма\n"
     "/new <промпт> — сгенерировать ролик и прислать на аппрув\n"
     "/caption <id> <текст> — заменить подпись перед публикацией\n"
     "/queue — состояние очереди\n"
@@ -50,6 +55,72 @@ async def cmd_new(
     item = await queue.get(item_id)
     assert item is not None
     asyncio.create_task(pipeline.generate(item))
+
+
+@router.message(Command("hooks"))
+async def cmd_hooks(
+    message: Message, command: CommandObject, settings: Settings
+) -> None:
+    """Пять вариантов сценария под сцену — по одному на каждый архетип хука."""
+    if not is_admin(message.from_user.id if message.from_user else None, settings):
+        return
+    subject = (command.args or "").strip()
+    if not subject:
+        await message.answer("Про что сцена? /hooks Гладиатор, финальный бой")
+        return
+    for brief in suggest_hooks(subject):
+        await message.answer(brief.as_text())
+
+
+@router.message(Command("clip"))
+async def cmd_clip(
+    message: Message, command: CommandObject, queue: Queue, pipeline: Pipeline,
+    settings: Settings,
+) -> None:
+    """/clip <файл> <12:30-12:58> <текст хука>"""
+    if not is_admin(message.from_user.id if message.from_user else None, settings):
+        return
+    parts = (command.args or "").split(maxsplit=2)
+    if len(parts) < 2:
+        await message.answer(
+            "Формат: /clip gladiator.mp4 12:30-12:58 Смотри на его руки\n"
+            "Файл ищется в SOURCES_DIR. Тайминг можно как 12:30-+25."
+        )
+        return
+    filename, span_text = parts[0], parts[1]
+    hook_text = parts[2] if len(parts) > 2 else ""
+    try:
+        span = parse_span(span_text)
+    except ClipError as exc:
+        await message.answer(str(exc))
+        return
+
+    source = os.path.join(settings.sources_dir, filename)
+    if not os.path.exists(source):
+        await message.answer(f"Не нашёл исходник {source}")
+        return
+
+    problems = validate(duration_sec=span.duration_sec, hook_text=hook_text)
+    brief = build_brief(os.path.splitext(filename)[0])
+    item_id = await queue.add(
+        prompt=f"{filename} {span_text}",
+        caption=brief.caption if not hook_text else _caption_for(hook_text, brief),
+        kind=Kind.CLIP,
+        source_path=source,
+        span=span_text,
+        hook_text=hook_text,
+    )
+    warning = ("\n⚠️ " + "; ".join(problems)) if problems else ""
+    await message.answer(f"Принял, #{item_id}. Режу {span.duration_sec:.0f} c.{warning}")
+    item = await queue.get(item_id)
+    assert item is not None
+    asyncio.create_task(pipeline.make_clip(item))
+
+
+def _caption_for(hook_text: str, brief: Brief) -> str:
+    """Подпись собираем из своего хука, но с CTA и хэштегами из плейбука."""
+    _, _, tail = brief.caption.partition("\n\n")
+    return f"{hook_text}\n\n{tail}"
 
 
 @router.message(Command("caption"))

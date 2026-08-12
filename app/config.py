@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     publish_batch: int = 1
     auto_approve: bool = False
 
+    # Где лежат исходники фильмов и куда складывать нарезки.
+    sources_dir: str = "./sources"
+    clips_dir: str = "./data/clips"
+
     db_path: str = "./data/queue.db"
     log_level: str = "INFO"
 

@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import logging
+import os
 
 from aiogram import Bot
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import FSInputFile, InlineKeyboardButton, InlineKeyboardMarkup
 
+from app.clipper import ClipError, cut, parse_span
 from app.config import Settings
 from app.db import Item, Queue, Status
+from app.playbook import HOOK_WINDOW_SEC, validate
 from app.providers.higgsfield import HiggsfieldClient, HiggsfieldError
 
 log = logging.getLogger(__name__)
@@ -69,6 +72,46 @@ class Pipeline:
             tg_message_id=message.message_id,
         )
         log.info("ролик #%s готов: %s", item.id, result.url)
+
+    async def make_clip(self, item: Item) -> None:
+        """Режет момент из фильма, проверяет по плейбуку и шлёт на аппрув."""
+        await self.queue.update(item.id, status=Status.GENERATING, error=None)
+        output = os.path.join(self.settings.clips_dir, f"{item.id}.mp4")
+        try:
+            span = parse_span(item.span or "")
+            await cut(
+                item.source_path or "",
+                span,
+                output,
+                hook_text=item.hook_text,
+                hook_seconds=HOOK_WINDOW_SEC,
+            )
+            media_url = None
+            async with self._client() as client:
+                media_url = await client.upload_media(output)
+        except (ClipError, HiggsfieldError) as exc:
+            log.exception("нарезка #%s не удалась", item.id)
+            await self.queue.update(item.id, status=Status.FAILED, error=str(exc))
+            await self._notify(f"❌ Нарезка #{item.id} не получилась: {exc}")
+            return
+
+        problems = validate(duration_sec=span.duration_sec, hook_text=item.hook_text)
+        warning = ("\n⚠️ " + "; ".join(problems)) if problems else ""
+        caption = item.caption or item.prompt
+        message = await self.bot.send_video(
+            chat_id=self.settings.tg_channel_id,
+            video=FSInputFile(output),
+            caption=f"#{item.id} · {caption}{warning}",
+            reply_markup=None if self.settings.auto_approve else approval_keyboard(item.id),
+        )
+        await self.queue.update(
+            item.id,
+            status=Status.APPROVED if self.settings.auto_approve else Status.AWAITING_APPROVAL,
+            video_url=media_url,
+            local_path=output,
+            tg_message_id=message.message_id,
+        )
+        log.info("нарезка #%s готова: %s", item.id, output)
 
     async def publish_due(self) -> None:
         """Тик планировщика: забирает одобренные ролики и публикует в TikTok."""

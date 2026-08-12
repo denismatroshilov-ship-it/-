@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from dataclasses import dataclass
 from typing import Any
 
@@ -13,6 +14,7 @@ log = logging.getLogger(__name__)
 # если в аккаунте включена другая версия API.
 EP_GENERATE_VIDEO = "/v1/video/generate"
 EP_JOB = "/v1/jobs/{job_id}"
+EP_MEDIA_UPLOAD = "/v1/media/upload"
 EP_TIKTOK_ACCOUNTS = "/v1/tiktok/accounts"
 EP_TIKTOK_PUBLISH = "/v1/tiktok/publish"
 EP_TIKTOK_PUBLISH_STATUS = "/v1/tiktok/publish/{job_id}"
@@ -113,6 +115,30 @@ class HiggsfieldClient:
                 raise HiggsfieldError(f"job {job_id} не завершился за {timeout_sec}s")
             log.debug("job %s: %s, ждём", job_id, status or "pending")
             await asyncio.sleep(poll_sec)
+
+    # --- загрузка готового файла ------------------------------------------
+
+    async def upload_media(self, path: str) -> str:
+        """Заливает локальный ролик и возвращает URL, пригодный для публикации."""
+        if self._session is None:
+            raise HiggsfieldError("client used outside of `async with` block")
+        url = f"{self._base_url}{EP_MEDIA_UPLOAD}"
+        with open(path, "rb") as handle:
+            form = aiohttp.FormData()
+            form.add_field(
+                "file", handle, filename=os.path.basename(path), content_type="video/mp4"
+            )
+            # Content-Type задаёт aiohttp под multipart, дефолтный json тут мешает.
+            headers = {"Authorization": self._headers["Authorization"]}
+            async with self._session.post(url, data=form, headers=headers) as response:
+                body = await response.text()
+                if response.status >= 400:
+                    raise HiggsfieldError(f"upload → {response.status}: {body}")
+                data = await response.json()
+        media_url = _extract_url(data) or data.get("media_url")
+        if not media_url:
+            raise HiggsfieldError(f"нет ссылки на загруженный файл: {data}")
+        return str(media_url)
 
     # --- TikTok ----------------------------------------------------------
 
