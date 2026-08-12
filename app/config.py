@@ -20,10 +20,6 @@ class Settings(BaseSettings):
     higgsfield_base_url: str = "https://api.higgsfield.ai"
     tiktok_account_id: str | None = None
 
-    video_model: str = "higgsfield-video-1"
-    video_aspect_ratio: str = "9:16"
-    video_duration_sec: int = 10
-
     publish_cron: str = "0 9,15,20 * * *"
     publish_batch: int = 1
     auto_approve: bool = False

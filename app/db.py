@@ -12,9 +12,13 @@ import aiosqlite
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    prompt TEXT NOT NULL,
+    title TEXT NOT NULL,
     caption TEXT NOT NULL DEFAULT '',
     status TEXT NOT NULL,
+    source_path TEXT,
+    span TEXT,
+    hook_text TEXT NOT NULL DEFAULT '',
+    local_path TEXT,
     video_url TEXT,
     tg_message_id INTEGER,
     tiktok_job_id TEXT,
@@ -25,9 +29,8 @@ CREATE TABLE IF NOT EXISTS items (
 CREATE INDEX IF NOT EXISTS idx_items_status ON items(status);
 """
 
-# Колонки, добавленные после первой версии схемы: на старой БД доливаем ALTER'ом.
+# Колонки, доливаемые ALTER'ом на БД, созданной прошлой версией схемы.
 MIGRATIONS = {
-    "kind": "TEXT NOT NULL DEFAULT 'generated'",
     "source_path": "TEXT",
     "span": "TEXT",
     "hook_text": "TEXT NOT NULL DEFAULT ''",
@@ -35,14 +38,9 @@ MIGRATIONS = {
 }
 
 
-class Kind(StrEnum):
-    GENERATED = "generated"  # ролик из text→video
-    CLIP = "clip"            # нарезка момента из фильма
-
-
 class Status(StrEnum):
-    NEW = "new"                # добавлено, видео ещё не сгенерировано
-    GENERATING = "generating"
+    NEW = "new"                # добавлено, ещё не нарезано
+    CUTTING = "cutting"
     AWAITING_APPROVAL = "awaiting_approval"
     APPROVED = "approved"      # ждёт своего слота в расписании
     PUBLISHING = "publishing"
@@ -54,35 +52,33 @@ class Status(StrEnum):
 @dataclass(slots=True)
 class Item:
     id: int
-    prompt: str
+    title: str
     caption: str
     status: Status
+    source_path: str
+    span: str
+    hook_text: str
+    local_path: str | None
     video_url: str | None
     tg_message_id: int | None
     tiktok_job_id: str | None
     error: str | None
-    kind: Kind = Kind.GENERATED
-    source_path: str | None = None
-    span: str | None = None
-    hook_text: str = ""
-    local_path: str | None = None
 
     @classmethod
     def from_row(cls, row: aiosqlite.Row) -> "Item":
         return cls(
             id=row["id"],
-            prompt=row["prompt"],
+            title=row["title"],
             caption=row["caption"],
             status=Status(row["status"]),
-            video_url=row["video_url"],
-            tg_message_id=row["tg_message_id"],
-            tiktok_job_id=row["tiktok_job_id"],
-            error=row["error"],
-            kind=Kind(row["kind"]),
             source_path=row["source_path"],
             span=row["span"],
             hook_text=row["hook_text"],
             local_path=row["local_path"],
+            video_url=row["video_url"],
+            tg_message_id=row["tg_message_id"],
+            tiktok_job_id=row["tiktok_job_id"],
+            error=row["error"],
         )
 
 
@@ -92,7 +88,7 @@ def _now() -> str:
 
 class Queue:
     """Очередь роликов. Одна запись = один ролик, который проходит путь
-    new → generating → awaiting_approval → approved → publishing → published."""
+    new → cutting → awaiting_approval → approved → publishing → published."""
 
     def __init__(self, path: str) -> None:
         self._path = path
@@ -119,21 +115,20 @@ class Queue:
 
     async def add(
         self,
-        prompt: str,
-        caption: str = "",
         *,
-        kind: Kind = Kind.GENERATED,
-        source_path: str | None = None,
-        span: str | None = None,
-        hook_text: str = "",
+        title: str,
+        caption: str,
+        source_path: str,
+        span: str,
+        hook_text: str,
     ) -> int:
         async with self._connect() as db:
             cursor = await db.execute(
-                "INSERT INTO items (prompt, caption, status, kind, source_path, span,"
+                "INSERT INTO items (title, caption, status, source_path, span,"
                 " hook_text, created_at, updated_at)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 (
-                    prompt, caption, Status.NEW, kind, source_path, span,
+                    title, caption, Status.NEW, source_path, span,
                     hook_text, _now(), _now(),
                 ),
             )
@@ -167,7 +162,7 @@ class Queue:
         if not fields:
             return
         allowed = {
-            "prompt",
+            "title",
             "caption",
             "status",
             "video_url",

@@ -39,48 +39,14 @@ class Pipeline:
             self.settings.higgsfield_api_key, self.settings.higgsfield_base_url
         )
 
-    async def generate(self, item: Item) -> None:
-        """Генерит ролик и кладёт превью в TG-канал на аппрув."""
-        await self.queue.update(item.id, status=Status.GENERATING, error=None)
-        try:
-            async with self._client() as client:
-                job_id = await client.generate_video(
-                    item.prompt,
-                    model=self.settings.video_model,
-                    aspect_ratio=self.settings.video_aspect_ratio,
-                    duration_sec=self.settings.video_duration_sec,
-                )
-                result = await client.wait_for_video(job_id)
-        except HiggsfieldError as exc:
-            log.exception("генерация #%s не удалась", item.id)
-            await self.queue.update(item.id, status=Status.FAILED, error=str(exc))
-            await self._notify(f"❌ Ролик #{item.id} не сгенерировался: {exc}")
-            return
-
-        auto = self.settings.auto_approve
-        caption = item.caption or item.prompt
-        message = await self.bot.send_video(
-            chat_id=self.settings.tg_channel_id,
-            video=result.url,
-            caption=f"#{item.id} · {caption}",
-            reply_markup=None if auto else approval_keyboard(item.id),
-        )
-        await self.queue.update(
-            item.id,
-            status=Status.APPROVED if auto else Status.AWAITING_APPROVAL,
-            video_url=result.url,
-            tg_message_id=message.message_id,
-        )
-        log.info("ролик #%s готов: %s", item.id, result.url)
-
     async def make_clip(self, item: Item) -> None:
         """Режет момент из фильма, проверяет по плейбуку и шлёт на аппрув."""
-        await self.queue.update(item.id, status=Status.GENERATING, error=None)
+        await self.queue.update(item.id, status=Status.CUTTING, error=None)
         output = os.path.join(self.settings.clips_dir, f"{item.id}.mp4")
         try:
-            span = parse_span(item.span or "")
+            span = parse_span(item.span)
             await cut(
-                item.source_path or "",
+                item.source_path,
                 span,
                 output,
                 hook_text=item.hook_text,
@@ -97,7 +63,7 @@ class Pipeline:
 
         problems = validate(duration_sec=span.duration_sec, hook_text=item.hook_text)
         warning = ("\n⚠️ " + "; ".join(problems)) if problems else ""
-        caption = item.caption or item.prompt
+        caption = item.caption or item.title
         message = await self.bot.send_video(
             chat_id=self.settings.tg_channel_id,
             video=FSInputFile(output),
@@ -138,7 +104,7 @@ class Pipeline:
                     publish_id = await client.tiktok_publish(
                         account_id=self.settings.tiktok_account_id,
                         video_url=item.video_url,
-                        caption=item.caption or item.prompt,
+                        caption=item.caption or item.title,
                     )
                 except HiggsfieldError as exc:
                     log.exception("публикация #%s не удалась", item.id)

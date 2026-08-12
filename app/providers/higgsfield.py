@@ -1,9 +1,13 @@
+"""Транспорт публикации: заливка готового файла и постинг в TikTok.
+
+Генерации видео здесь нет и быть не должно — ролики режутся из фильмов
+(`app/clipper.py`), сервис нужен только чтобы доставить готовый файл в TikTok.
+"""
+
 from __future__ import annotations
 
-import asyncio
 import logging
 import os
-from dataclasses import dataclass
 from typing import Any
 
 import aiohttp
@@ -12,25 +16,14 @@ log = logging.getLogger(__name__)
 
 # Пути REST API вынесены сюда, чтобы их можно было поправить одним местом,
 # если в аккаунте включена другая версия API.
-EP_GENERATE_VIDEO = "/v1/video/generate"
-EP_JOB = "/v1/jobs/{job_id}"
 EP_MEDIA_UPLOAD = "/v1/media/upload"
 EP_TIKTOK_ACCOUNTS = "/v1/tiktok/accounts"
 EP_TIKTOK_PUBLISH = "/v1/tiktok/publish"
 EP_TIKTOK_PUBLISH_STATUS = "/v1/tiktok/publish/{job_id}"
 
-TERMINAL_OK = {"completed", "succeeded", "success", "done"}
-TERMINAL_FAIL = {"failed", "error", "cancelled", "canceled"}
-
 
 class HiggsfieldError(RuntimeError):
     pass
-
-
-@dataclass(slots=True)
-class VideoResult:
-    job_id: str
-    url: str
 
 
 class HiggsfieldClient:
@@ -71,50 +64,6 @@ class HiggsfieldClient:
             if response.status >= 400:
                 raise HiggsfieldError(f"{method} {path} → {response.status}: {body}")
             return await response.json()
-
-    # --- генерация видео -------------------------------------------------
-
-    async def generate_video(
-        self,
-        prompt: str,
-        *,
-        model: str,
-        aspect_ratio: str = "9:16",
-        duration_sec: int = 10,
-    ) -> str:
-        data = await self._request(
-            "POST",
-            EP_GENERATE_VIDEO,
-            {
-                "model": model,
-                "prompt": prompt,
-                "aspect_ratio": aspect_ratio,
-                "duration": duration_sec,
-            },
-        )
-        job_id = data.get("job_id") or data.get("id")
-        if not job_id:
-            raise HiggsfieldError(f"нет job_id в ответе: {data}")
-        return str(job_id)
-
-    async def wait_for_video(
-        self, job_id: str, *, poll_sec: int = 10, timeout_sec: int = 900
-    ) -> VideoResult:
-        deadline = asyncio.get_running_loop().time() + timeout_sec
-        while True:
-            data = await self._request("GET", EP_JOB.format(job_id=job_id))
-            status = str(data.get("status", "")).lower()
-            if status in TERMINAL_OK:
-                url = _extract_url(data)
-                if not url:
-                    raise HiggsfieldError(f"job {job_id} завершён, но нет ссылки: {data}")
-                return VideoResult(job_id=job_id, url=url)
-            if status in TERMINAL_FAIL:
-                raise HiggsfieldError(f"job {job_id} упал: {data.get('error', data)}")
-            if asyncio.get_running_loop().time() >= deadline:
-                raise HiggsfieldError(f"job {job_id} не завершился за {timeout_sec}s")
-            log.debug("job %s: %s, ждём", job_id, status or "pending")
-            await asyncio.sleep(poll_sec)
 
     # --- загрузка готового файла ------------------------------------------
 

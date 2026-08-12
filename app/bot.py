@@ -10,7 +10,7 @@ from aiogram.types import CallbackQuery, Message
 
 from app.clipper import ClipError, parse_span
 from app.config import Settings
-from app.db import Kind, Queue, Status
+from app.db import Queue, Status
 from app.pipeline import Pipeline
 from app.playbook import Brief, build_brief, suggest_hooks, validate
 from app.providers.higgsfield import HiggsfieldClient, HiggsfieldError
@@ -22,7 +22,6 @@ HELP = (
     "Команды:\n"
     "/hooks <сцена> — 5 вариантов сценария под сцену\n"
     "/clip <файл> <12:30-12:58> <хук> — нарезать момент из фильма\n"
-    "/new <промпт> — сгенерировать ролик и прислать на аппрув\n"
     "/caption <id> <текст> — заменить подпись перед публикацией\n"
     "/queue — состояние очереди\n"
     "/publish — выложить ближайшую партию прямо сейчас\n"
@@ -37,24 +36,6 @@ def is_admin(user_id: int | None, settings: Settings) -> bool:
 @router.message(Command("start", "help"))
 async def cmd_help(message: Message) -> None:
     await message.answer(HELP)
-
-
-@router.message(Command("new"))
-async def cmd_new(
-    message: Message, command: CommandObject, queue: Queue, pipeline: Pipeline,
-    settings: Settings,
-) -> None:
-    if not is_admin(message.from_user.id if message.from_user else None, settings):
-        return
-    prompt = (command.args or "").strip()
-    if not prompt:
-        await message.answer("Нужен промпт: /new кот-бариста варит эспрессо, неон")
-        return
-    item_id = await queue.add(prompt)
-    await message.answer(f"Принял, #{item_id}. Генерю — это пара минут.")
-    item = await queue.get(item_id)
-    assert item is not None
-    asyncio.create_task(pipeline.generate(item))
 
 
 @router.message(Command("hooks"))
@@ -103,9 +84,8 @@ async def cmd_clip(
     problems = validate(duration_sec=span.duration_sec, hook_text=hook_text)
     brief = build_brief(os.path.splitext(filename)[0])
     item_id = await queue.add(
-        prompt=f"{filename} {span_text}",
+        title=f"{filename} {span_text}",
         caption=brief.caption if not hook_text else _caption_for(hook_text, brief),
-        kind=Kind.CLIP,
         source_path=source,
         span=span_text,
         hook_text=hook_text,
