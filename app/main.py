@@ -14,6 +14,21 @@ from app.pipeline import Pipeline
 log = logging.getLogger(__name__)
 
 
+async def preflight(bot: Bot, settings: Settings) -> None:
+    """Проверяет токен и доступ к каналу до старта, а не в момент первой
+    публикации: иначе ролик молча уходит в failed через полчаса после запуска."""
+    me = await bot.get_me()
+    log.info("бот @%s на связи", me.username)
+    chat = await bot.get_chat(settings.tg_channel_id)
+    member = await bot.get_chat_member(chat.id, me.id)
+    if member.status not in {"administrator", "creator"}:
+        raise RuntimeError(
+            f"бот не админ в {settings.tg_channel_id} (статус {member.status}) — "
+            "без этого он не сможет постить превью"
+        )
+    log.info("канал %s (%s) доступен, бот админ", chat.title, chat.id)
+
+
 async def main() -> None:
     settings = get_settings()
     logging.basicConfig(
@@ -25,6 +40,7 @@ async def main() -> None:
     await queue.init()
 
     bot = build_bot(settings)
+    await preflight(bot, settings)
     pipeline = Pipeline(settings, queue, bot)
     dispatcher = build_dispatcher(settings, queue, pipeline)
 

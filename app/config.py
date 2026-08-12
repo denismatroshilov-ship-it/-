@@ -11,7 +11,8 @@ class Settings(BaseSettings):
     )
 
     tg_bot_token: str
-    tg_channel_id: int
+    # Либо числовой id (-100…), либо @username публичного канала.
+    tg_channel_id: str
     # Строкой, а не list[int]: pydantic-settings иначе пытается разобрать
     # переменную окружения как JSON.
     tg_admin_ids: str = ""
