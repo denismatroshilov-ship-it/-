@@ -157,7 +157,9 @@ async def cmd_accounts(message: Message, settings: Settings) -> None:
         await message.answer("Нет подключённых TikTok-аккаунтов.")
         return
     lines = [
-        f"{acc.get('id')} — @{acc.get('username', '?')}" for acc in accounts
+        f"{acc.get('connector_id') or acc.get('id')} — {acc.get('name', '?')}"
+        f" [{acc.get('status', '?')}]"
+        for acc in accounts
     ]
     await message.answer("\n".join(lines))
 

@@ -108,7 +108,8 @@ class HiggsfieldClient:
             "POST",
             EP_TIKTOK_PUBLISH,
             {
-                "account_id": account_id,
+                # Аккаунт в ответах API называется connector_id.
+                "connector_id": account_id,
                 "video_url": video_url,
                 "caption": caption,
                 "privacy_level": privacy,
