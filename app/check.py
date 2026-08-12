@@ -84,12 +84,14 @@ async def check_telegram() -> bool:
     try:
         me = await bot.get_me()
         line(OK, f"бот @{me.username}")
-        chat = await bot.get_chat(settings.tg_channel_id)
-        member = await bot.get_chat_member(chat.id, me.id)
-        if member.status not in {"administrator", "creator"}:
-            line(FAIL, f"бот не админ в {chat.title} (статус {member.status})")
+        try:
+            chat = await bot.get_chat(settings.review_chat)
+        except TelegramAPIError as exc:
+            line(FAIL, f"чат превью {settings.review_chat} недоступен: {exc}")
+            line(FAIL, f"если это личка — открой @{me.username} и нажми /start")
             return False
-        line(OK, f"канал {chat.title} ({chat.id}), бот админ")
+        where = chat.title or chat.username or "личка"
+        line(OK, f"превью пойдут в {where} ({chat.id})")
         if not settings.admin_ids:
             line(FAIL, "TG_ADMIN_IDS пуст — команды никого не послушают")
             return False

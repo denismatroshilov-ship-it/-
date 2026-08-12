@@ -68,7 +68,7 @@ class Pipeline:
         warning = ("\n⚠️ " + "; ".join(problems)) if problems else ""
         caption = item.caption or item.title
         message = await self.bot.send_video(
-            chat_id=self.settings.tg_channel_id,
+            chat_id=self.settings.review_chat,
             video=FSInputFile(output),
             caption=f"#{item.id} · {caption}{warning}",
             reply_markup=None if self.settings.auto_approve else approval_keyboard(item.id),
@@ -142,6 +142,6 @@ class Pipeline:
 
     async def _notify(self, text: str) -> None:
         try:
-            await self.bot.send_message(self.settings.tg_channel_id, text)
+            await self.bot.send_message(self.settings.review_chat, text)
         except Exception:  # noqa: BLE001 — уведомление не должно ронять пайплайн
             log.exception("не смог отправить уведомление в канал")

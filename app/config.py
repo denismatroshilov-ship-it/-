@@ -11,8 +11,10 @@ class Settings(BaseSettings):
     )
 
     tg_bot_token: str
-    # Либо числовой id (-100…), либо @username публичного канала.
-    tg_channel_id: str
+    # Куда падают превью на аппрув и служебные сообщения. Это рабочая
+    # переписка, а не витрина: по умолчанию — личка первого администратора.
+    # Можно указать id приватного канала (-100…), если работаете вдвоём.
+    tg_review_chat: str = ""
     # Строкой, а не list[int]: pydantic-settings иначе пытается разобрать
     # переменную окружения как JSON.
     tg_admin_ids: str = ""
@@ -39,6 +41,15 @@ class Settings(BaseSettings):
             for part in self.tg_admin_ids.replace(" ", "").split(",")
             if part
         }
+
+    @property
+    def review_chat(self) -> str:
+        """Чат для превью. Пусто — шлём в личку первому админу."""
+        if self.tg_review_chat:
+            return self.tg_review_chat
+        if not self.admin_ids:
+            raise ValueError("нужен TG_REVIEW_CHAT или хотя бы один TG_ADMIN_IDS")
+        return str(sorted(self.admin_ids)[0])
 
     @property
     def cron_fields(self) -> dict[str, str]:

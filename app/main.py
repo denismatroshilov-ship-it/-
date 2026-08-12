@@ -3,11 +3,13 @@ from __future__ import annotations
 import asyncio
 import logging
 
+from aiogram import Bot
+from aiogram.exceptions import TelegramAPIError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from app.bot import build_bot, build_dispatcher
-from app.config import get_settings
+from app.config import Settings, get_settings
 from app.db import Queue
 from app.pipeline import Pipeline
 
@@ -15,18 +17,19 @@ log = logging.getLogger(__name__)
 
 
 async def preflight(bot: Bot, settings: Settings) -> None:
-    """Проверяет токен и доступ к каналу до старта, а не в момент первой
+    """Проверяет токен и доступ к чату превью до старта, а не в момент первой
     публикации: иначе ролик молча уходит в failed через полчаса после запуска."""
     me = await bot.get_me()
     log.info("бот @%s на связи", me.username)
-    chat = await bot.get_chat(settings.tg_channel_id)
-    member = await bot.get_chat_member(chat.id, me.id)
-    if member.status not in {"administrator", "creator"}:
+    try:
+        chat = await bot.get_chat(settings.review_chat)
+    except TelegramAPIError as exc:
         raise RuntimeError(
-            f"бот не админ в {settings.tg_channel_id} (статус {member.status}) — "
-            "без этого он не сможет постить превью"
-        )
-    log.info("канал %s (%s) доступен, бот админ", chat.title, chat.id)
+            f"не достучаться до чата превью {settings.review_chat}: {exc}. "
+            f"Если это личка — открой @{me.username} и нажми /start: "
+            "боту нельзя писать первым."
+        ) from exc
+    log.info("превью пойдут в %s (%s)", chat.title or chat.username or "личку", chat.id)
 
 
 async def main() -> None:
