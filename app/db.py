@@ -183,6 +183,26 @@ class Queue:
             )
             await db.commit()
 
+    async def claim_one(self, item_id: int) -> Item | None:
+        """Забирает конкретный ролик на публикацию. Возвращает None, если он
+        уже не в approved — защита от двойного нажатия кнопки."""
+        async with self._connect() as db:
+            await db.execute("BEGIN IMMEDIATE")
+            async with db.execute(
+                "SELECT * FROM items WHERE id = ? AND status = ?",
+                (item_id, Status.APPROVED),
+            ) as cur:
+                row = await cur.fetchone()
+            if row is None:
+                await db.commit()
+                return None
+            await db.execute(
+                "UPDATE items SET status = ?, updated_at = ? WHERE id = ?",
+                (Status.PUBLISHING, _now(), item_id),
+            )
+            await db.commit()
+        return Item.from_row(row)
+
     async def claim_for_publishing(self, limit: int) -> list[Item]:
         """Атомарно забирает до `limit` одобренных роликов, помечая их publishing,
         чтобы параллельный тик планировщика не взял их повторно."""

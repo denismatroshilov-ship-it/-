@@ -164,9 +164,9 @@ async def cmd_accounts(message: Message, settings: Settings) -> None:
     await message.answer("\n".join(lines))
 
 
-@router.callback_query(F.data.startswith(("ok:", "no:")))
+@router.callback_query(F.data.startswith(("now:", "slot:", "no:")))
 async def on_decision(
-    callback: CallbackQuery, queue: Queue, settings: Settings
+    callback: CallbackQuery, queue: Queue, pipeline: Pipeline, settings: Settings
 ) -> None:
     if not is_admin(callback.from_user.id, settings):
         await callback.answer("Не для тебя кнопка.", show_alert=True)
@@ -181,11 +181,20 @@ async def on_decision(
         await callback.answer(f"Уже в статусе {item.status}.", show_alert=True)
         return
 
-    approved = action == "ok"
-    await queue.update(item_id, status=Status.APPROVED if approved else Status.REJECTED)
+    if action == "no":
+        await queue.update(item_id, status=Status.REJECTED)
+        answer = "Отклонено"
+    else:
+        await queue.update(item_id, status=Status.APPROVED)
+        answer = "Публикую…" if action == "now" else "Уйдёт в ближайший слот"
+
+    # Кнопки убираем до публикации: иначе второе нажатие успеет прилететь,
+    # пока TikTok обрабатывает первое.
     if callback.message is not None:
         await callback.message.edit_reply_markup(reply_markup=None)
-    await callback.answer("В очереди на публикацию" if approved else "Отклонено")
+    await callback.answer(answer)
+    if action == "now":
+        asyncio.create_task(pipeline.publish_now(item_id))
 
 
 def build_dispatcher(settings: Settings, queue: Queue, pipeline: Pipeline) -> Dispatcher:
