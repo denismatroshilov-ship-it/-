@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     publish_batch: int = 1
     auto_approve: bool = False
 
+    # HTTP-API для iOS-приложения «Hermes». Пусто = API выключен.
+    # Токен — тот же, что вбивается в приложении на айфоне.
+    hermes_api_token: str = ""
+    hermes_api_host: str = "0.0.0.0"
+    hermes_api_port: int = 8000
+
     # Где лежат исходники фильмов и куда складывать нарезки.
     sources_dir: str = "./sources"
     clips_dir: str = "./data/clips"

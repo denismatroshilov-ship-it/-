@@ -8,6 +8,7 @@ from aiogram.exceptions import TelegramAPIError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
+from app.api import start_api
 from app.bot import build_bot, build_dispatcher
 from app.config import Settings, get_settings
 from app.db import Queue
@@ -58,10 +59,14 @@ async def main() -> None:
     scheduler.start()
     log.info("расписание публикаций: %s (UTC)", settings.publish_cron)
 
+    api_runner = await start_api(settings, queue, pipeline)
+
     try:
         await dispatcher.start_polling(bot)
     finally:
         scheduler.shutdown(wait=False)
+        if api_runner is not None:
+            await api_runner.cleanup()
         await bot.session.close()
 
 
