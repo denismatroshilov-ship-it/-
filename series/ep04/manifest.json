@@ -1,81 +1,104 @@
 {
   "episode": 4,
-  "title": "Обмен",
-  "series": "Late-1990s secret-agent science-fiction comedy",
-  "timecode_in_film": "36-48s",
-  "duration_seconds": 12,
-  "aspect_ratio": "16:9",
+  "series": "Mind & Money",
+  "title": "Wealth Is What You Don't See",
+  "title_ru": "Богатство — это то, чего не видно",
+  "format": "stickman explainer, psychology of money",
+  "language": "en",
   "width": 1920,
   "height": 1080,
   "fps": 24,
+  "background": "#FBF7F1",
+  "ink": "#272724",
   "loudness_lufs": -14,
-  "assets": {
-    "face_reference": "https://d2ol7oe51mr4n9.cloudfront.net/user_3FWhOmOWE95y5o8EZs9Sws8jELA/3b2c1cbe-b6e1-4f9c-9f97-d21195c32a8c.jpg",
-    "episode1_key_frame": "https://d8j0ntlcm91z4.cloudfront.net/user_3FWhOmOWE95y5o8EZs9Sws8jELA/hf_20260824_132857_ee7d81ce-b183-42c4-bbcb-549a008d748c.png",
-    "episode1_video": "https://d8j0ntlcm91z4.cloudfront.net/user_3FWhOmOWE95y5o8EZs9Sws8jELA/hf_20260824_133023_e5c89d71-a249-4f0e-a83d-75bbec5a959b.mp4",
-    "episode2_video": "https://d8j0ntlcm91z4.cloudfront.net/user_3FWhOmOWE95y5o8EZs9Sws8jELA/hf_20260824_133322_e465e393-4b29-4402-9946-b2afe15cb7bb.mp4"
+  "shot_padding_seconds": 0.45,
+  "voice": {
+    "voice_id": "7O2znNqD2IdXSYSrr6sb",
+    "name": "альберт",
+    "model_id": "eleven_multilingual_v2",
+    "note": "голос серии из воркспейса ElevenLabs, спроектирован под этот формат"
   },
-  "generation": {
-    "image_model": "nano_banana",
-    "video_model": "seedance_2_0_mini",
-    "video_prompt": "prompts/ep04_video.txt",
-    "video_start_frame": "ep04_shot01_under_sedan",
-    "video_output": "build/clips/ep04_full.mp4"
+  "style_reference": {
+    "asset_id": "tbVF4t9eE1SSMYSktcJa",
+    "note": "кадр предыдущей серии; палитра снята с него пипеткой"
+  },
+  "palette": {
+    "bg": "#FBF7F1",
+    "ink": "#272724",
+    "teal": "#51867E",
+    "ochre": "#D9A84C",
+    "grey": "#424242"
   },
   "shots": [
     {
       "n": 1,
-      "name": "ep04_shot01_under_sedan",
-      "start": 0.0,
-      "duration": 2.0,
-      "framing": "Нижний ракурс с уровня асфальта",
-      "beat": "Краб под днищем седана клацает клешнёй по краденому стакану",
-      "prompt": "prompts/ep04_shot01_under_sedan.txt"
+      "name": "mm_ep04_01_a_car_goes_past",
+      "duration": 7.0,
+      "vo": "A car goes past, and something in you says: that person is rich.",
+      "vo_ru": "Мимо проезжает машина, и что-то внутри говорит: вот этот человек богат."
     },
     {
       "n": 2,
-      "name": "ep04_shot02_cup_offer",
-      "start": 2.0,
-      "duration": 2.0,
-      "framing": "Макро руки",
-      "beat": "Агент двигает целый стаканчик по мокрому асфальту",
-      "prompt": "prompts/ep04_shot02_cup_offer.txt"
+      "name": "mm_ep04_02_you_saw_a_car",
+      "duration": 5.2,
+      "vo": "But you didn't see money. You saw a car.",
+      "vo_ru": "Но ты увидел не деньги. Ты увидел машину."
     },
     {
       "n": 3,
-      "name": "ep04_shot03_the_swap",
-      "start": 4.0,
-      "duration": 2.0,
-      "framing": "Средний под машиной",
-      "beat": "Краб меняет стаканы с бюрократическим достоинством",
-      "prompt": "prompts/ep04_shot03_the_swap.txt"
+      "name": "mm_ep04_03_money_that_left",
+      "duration": 8.4,
+      "vo": "Money spent on a car is money that left. The car is proof of what's gone.",
+      "vo_ru": "Деньги, потраченные на машину, — это деньги, которые ушли. Машина и есть доказательство того, чего больше нет."
     },
     {
       "n": 4,
-      "name": "ep04_shot04_claw_warning",
-      "start": 6.0,
-      "duration": 2.0,
-      "framing": "Реакция второго агента",
-      "beat": "Тянется к улике, отдёргивает руку от клешни",
-      "prompt": "prompts/ep04_shot04_claw_warning.txt"
+      "name": "mm_ep04_04_the_purchase_not_made",
+      "duration": 6.6,
+      "vo": "Wealth is the other thing. The purchase not made. The upgrade skipped.",
+      "vo_ru": "Богатство — это другое. Несделанная покупка. Пропущенный апгрейд."
     },
     {
       "n": 5,
-      "name": "ep04_shot05_alien_walks_off",
-      "start": 8.0,
-      "duration": 2.0,
-      "framing": "Общий",
-      "beat": "Краб уходит в переулок со стаканом как утренний пассажир",
-      "prompt": "prompts/ep04_shot05_alien_walks_off.txt"
+      "name": "mm_ep04_05_invisible_by_definition",
+      "duration": 6.6,
+      "vo": "It's invisible by definition — income you could have spent, and didn't.",
+      "vo_ru": "Оно невидимо по определению: доход, который мог уйти, и не ушёл."
     },
     {
       "n": 6,
-      "name": "ep04_shot06_the_sip",
-      "start": 10.0,
-      "duration": 2.0,
-      "framing": "Крупный, главный агент",
-      "beat": "Отпивает из возвращённого стакана и держит лицо. В затемнение",
-      "prompt": "prompts/ep04_shot06_the_sip.txt"
+      "name": "mm_ep04_06_we_copy_what_we_see",
+      "duration": 7.5,
+      "vo": "Which is why it's so hard to learn. We copy what we can see.",
+      "vo_ru": "Поэтому этому так трудно научиться. Мы копируем то, что видно."
+    },
+    {
+      "n": 7,
+      "name": "mm_ep04_07_what_we_see_is_spending",
+      "duration": 4.3,
+      "vo": "And what we can see is spending.",
+      "vo_ru": "А видно — только траты."
+    },
+    {
+      "n": 8,
+      "name": "mm_ep04_08_none_of_it_shows",
+      "duration": 8.0,
+      "vo": "The quiet account, the boring fund, the choice nobody posts — none of it shows.",
+      "vo_ru": "Тихий счёт, скучный фонд, выбор, который никто не выкладывает, — ничего из этого не видно."
+    },
+    {
+      "n": 9,
+      "name": "mm_ep04_09_the_wrong_model",
+      "duration": 5.7,
+      "vo": "So we model ourselves on the one thing wealth isn't.",
+      "vo_ru": "И мы равняемся ровно на то, чем богатство не является."
+    },
+    {
+      "n": 10,
+      "name": "mm_ep04_10_including_your_own",
+      "duration": 5.2,
+      "vo": "Wealth is what you don't see. Including your own.",
+      "vo_ru": "Богатство — это то, чего не видно. В том числе твоё."
     }
   ]
 }
