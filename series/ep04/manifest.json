@@ -1,0 +1,81 @@
+{
+  "episode": 4,
+  "title": "Обмен",
+  "series": "Late-1990s secret-agent science-fiction comedy",
+  "timecode_in_film": "36-48s",
+  "duration_seconds": 12,
+  "aspect_ratio": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "fps": 24,
+  "loudness_lufs": -14,
+  "assets": {
+    "face_reference": "https://d2ol7oe51mr4n9.cloudfront.net/user_3FWhOmOWE95y5o8EZs9Sws8jELA/3b2c1cbe-b6e1-4f9c-9f97-d21195c32a8c.jpg",
+    "episode1_key_frame": "https://d8j0ntlcm91z4.cloudfront.net/user_3FWhOmOWE95y5o8EZs9Sws8jELA/hf_20260824_132857_ee7d81ce-b183-42c4-bbcb-549a008d748c.png",
+    "episode1_video": "https://d8j0ntlcm91z4.cloudfront.net/user_3FWhOmOWE95y5o8EZs9Sws8jELA/hf_20260824_133023_e5c89d71-a249-4f0e-a83d-75bbec5a959b.mp4",
+    "episode2_video": "https://d8j0ntlcm91z4.cloudfront.net/user_3FWhOmOWE95y5o8EZs9Sws8jELA/hf_20260824_133322_e465e393-4b29-4402-9946-b2afe15cb7bb.mp4"
+  },
+  "generation": {
+    "image_model": "nano_banana",
+    "video_model": "seedance_2_0_mini",
+    "video_prompt": "prompts/ep04_video.txt",
+    "video_start_frame": "ep04_shot01_under_sedan",
+    "video_output": "build/clips/ep04_full.mp4"
+  },
+  "shots": [
+    {
+      "n": 1,
+      "name": "ep04_shot01_under_sedan",
+      "start": 0.0,
+      "duration": 2.0,
+      "framing": "Нижний ракурс с уровня асфальта",
+      "beat": "Краб под днищем седана клацает клешнёй по краденому стакану",
+      "prompt": "prompts/ep04_shot01_under_sedan.txt"
+    },
+    {
+      "n": 2,
+      "name": "ep04_shot02_cup_offer",
+      "start": 2.0,
+      "duration": 2.0,
+      "framing": "Макро руки",
+      "beat": "Агент двигает целый стаканчик по мокрому асфальту",
+      "prompt": "prompts/ep04_shot02_cup_offer.txt"
+    },
+    {
+      "n": 3,
+      "name": "ep04_shot03_the_swap",
+      "start": 4.0,
+      "duration": 2.0,
+      "framing": "Средний под машиной",
+      "beat": "Краб меняет стаканы с бюрократическим достоинством",
+      "prompt": "prompts/ep04_shot03_the_swap.txt"
+    },
+    {
+      "n": 4,
+      "name": "ep04_shot04_claw_warning",
+      "start": 6.0,
+      "duration": 2.0,
+      "framing": "Реакция второго агента",
+      "beat": "Тянется к улике, отдёргивает руку от клешни",
+      "prompt": "prompts/ep04_shot04_claw_warning.txt"
+    },
+    {
+      "n": 5,
+      "name": "ep04_shot05_alien_walks_off",
+      "start": 8.0,
+      "duration": 2.0,
+      "framing": "Общий",
+      "beat": "Краб уходит в переулок со стаканом как утренний пассажир",
+      "prompt": "prompts/ep04_shot05_alien_walks_off.txt"
+    },
+    {
+      "n": 6,
+      "name": "ep04_shot06_the_sip",
+      "start": 10.0,
+      "duration": 2.0,
+      "framing": "Крупный, главный агент",
+      "beat": "Отпивает из возвращённого стакана и держит лицо. В затемнение",
+      "prompt": "prompts/ep04_shot06_the_sip.txt"
+    }
+  ]
+}
