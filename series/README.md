@@ -43,6 +43,23 @@ python3 series/assemble.py series/ep04/manifest.json
 
 Нужны `ffmpeg` и `rsvg-convert` (`apt install ffmpeg librsvg2-bin`).
 
+## Свои материалы
+
+Если кадры и текст уже сделаны где-то ещё, серия заводится с них, а не
+рисуется заново:
+
+```bash
+python3 series/ingest.py --episode 4 \
+    --frames ~/mm/ep04 --vo ~/mm/ep04/vo.txt --title "..."
+python3 series/assemble.py series/ep04/manifest.json
+```
+
+Кадры берутся в естественном порядке имён (`frame2` раньше `frame10`) и
+раскладываются по планам. Число планов задаёт файл реплик, а не папка: если
+картинок пока меньше, недостающие планы остаются слейтами, сборка
+продолжает работать, и дорисованные кадры просто докладываются в
+`build/frames/` под именем плана.
+
 ## Сборка
 
 `assemble.py` берёт по каждому плану лучшее, что есть: готовый клип →
