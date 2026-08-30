@@ -60,17 +60,19 @@ def caption_chain(text, work, spec, index):
     """
     if not text:
         return ""
-    inner_h = int(spec["height"] * 0.89)
+    # полоса под текст считается от самой длинной реплики серии, а не на глаз:
+    # при переносе по 80 символов реплики укладываются в три строки
+    inner_h = int(spec["height"] * 0.82)
     inner_w = int(inner_h * spec["width"] / spec["height"])
     pad_x = (spec["width"] - inner_w) // 2
     path = work / f"cap{index:02d}.txt"
-    path.write_text("\n".join(textwrap.wrap(text, width=54)))
-    size = int(spec["height"] * 0.040)
+    path.write_text("\n".join(textwrap.wrap(text, width=80)))
+    size = int(spec["height"] * 0.030)
     return (
         f",scale={inner_w}:{inner_h},"
         f"pad={spec['width']}:{spec['height']}:{pad_x}:0:color={spec['bg']},"
         f"drawtext=fontfile={FONT}:textfile='{path.resolve()}':"
-        f"fontcolor={spec['ink']}:fontsize={size}:line_spacing={int(size * 0.42)}:"
+        f"fontcolor={spec['ink']}:fontsize={size}:line_spacing={int(size * 0.35)}:"
         f"x=(w-text_w)/2:y={inner_h}+((h-{inner_h})-text_h)/2"
     )
 

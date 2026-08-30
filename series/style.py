@@ -174,3 +174,142 @@ def bag(cx, y, w=110, fill=TEAL):
               f'{cx + w * 0.22} {y - h}" fill="none" stroke="{INK}" '
               f'stroke-width="{STROKE}" stroke-linecap="round"/>')
     return body + handle
+
+
+# --- предметы четвёртой серии --------------------------------------------
+
+def envelope(cx, cy, w=240, flap=True, fill=WHITE, dash=None):
+    h = w * 0.66
+    x, y = cx - w / 2, cy - h / 2
+    body = shape(f"M {x} {y} L {x + w} {y} L {x + w} {y + h} L {x} {y + h} Z", fill=fill, dash=dash)
+    if flap:  # закрытое письмо — клапан углом вниз
+        seal = shape(f"M {x} {y} L {cx} {y + h * 0.58} L {x + w} {y} Z", fill=fill, dash=dash)
+    else:     # вскрытое — клапан откинут вверх
+        seal = shape(f"M {x} {y} L {cx} {y - h * 0.52} L {x + w} {y} Z", fill=fill, dash=dash)
+    return body + seal
+
+
+def paper(cx, cy, w=230, h=300, rows=4, fill=WHITE, dash=None, marks=True):
+    x, y = cx - w / 2, cy - h / 2
+    sheet = shape(f"M {x} {y} L {x + w} {y} L {x + w} {y + h} L {x} {y + h} Z", fill=fill, dash=dash)
+    if not marks:
+        return sheet
+    lines = ""
+    step = h * 0.58 / max(1, rows)
+    for i in range(rows):
+        ly = y + h * 0.22 + step * (i + 0.5)
+        lw = w * (0.66 if i % 2 else 0.52)
+        lines += (f'<line x1="{x + w * 0.16}" y1="{ly}" x2="{x + w * 0.16 + lw}" y2="{ly}" '
+                  f'stroke="{INK}" stroke-width="{STROKE - 3}" stroke-linecap="round"/>')
+    return sheet + lines
+
+
+def plate(cx, cy, w=420, h=170, blocks=4, fill=WHITE, dash=None, block_fill=INK, sw=None):
+    """Табло с суммой. Цифры даны блоками: в стиле сериала текста в кадре нет."""
+    x, y = cx - w / 2, cy - h / 2
+    rr = h * 0.22
+    box = shape(
+        f"M {x + rr} {y} L {x + w - rr} {y} Q {x + w} {y} {x + w} {y + rr} "
+        f"L {x + w} {y + h - rr} Q {x + w} {y + h} {x + w - rr} {y + h} "
+        f"L {x + rr} {y + h} Q {x} {y + h} {x} {y + h - rr} "
+        f"L {x} {y + rr} Q {x} {y} {x + rr} {y} Z",
+        fill=fill, dash=dash, sw=sw or STROKE)
+    bw = w / (blocks * 2 + 1)
+    digits = "".join(
+        f'<rect x="{x + bw * (1 + 2 * i)}" y="{cy - h * 0.20}" width="{bw}" '
+        f'height="{h * 0.40}" rx="{bw * 0.22}" fill="{block_fill}"/>'
+        for i in range(blocks))
+    return box + digits
+
+
+def cloud(cx, cy, rx, ry, fill=WHITE, dash=None, ink=INK):
+    """Облако тревоги — тот же язык, что у облака мысли, но крупнее и рыхлее."""
+    lobes = ((-0.55, 0.10, 0.52), (-0.18, -0.30, 0.62), (0.25, -0.22, 0.58), (0.58, 0.14, 0.46))
+    body = "".join(
+        f'<ellipse cx="{cx + rx * dx}" cy="{cy + ry * dy}" rx="{rx * r}" ry="{ry * r * 1.25}" '
+        f'fill="{fill}" stroke="{ink}" stroke-width="{STROKE}"'
+        + (f' stroke-dasharray="{dash}"' if dash else "") + "/>"
+        for dx, dy, r in lobes)
+    return body
+
+
+def clock(cx, cy, r=95, hour=0.0, minute=0.0):
+    import math
+    face = circle(cx, cy, r)
+    hands = ""
+    for angle, length, width in ((hour * 30 - 90, r * 0.52, STROKE + 2),
+                                 (minute * 6 - 90, r * 0.78, STROKE - 1)):
+        a = math.radians(angle)
+        hands += (f'<line x1="{cx}" y1="{cy}" x2="{cx + length * math.cos(a):.1f}" '
+                  f'y2="{cy + length * math.sin(a):.1f}" stroke="{INK}" '
+                  f'stroke-width="{width}" stroke-linecap="round"/>')
+    return face + hands
+
+
+def calendar(cx, cy, w=520, cols=5, rows=3, marks=(), mark_fill=OCHRE):
+    h = w * 0.62
+    x, y = cx - w / 2, cy - h / 2
+    head = h * 0.20
+    frame = shape(f"M {x} {y} L {x + w} {y} L {x + w} {y + h} L {x} {y + h} Z")
+    bar = (f'<line x1="{x}" y1="{y + head}" x2="{x + w}" y2="{y + head}" '
+           f'stroke="{INK}" stroke-width="{STROKE}"/>')
+    cw, ch = w / cols, (h - head) / rows
+    cells = ""
+    for r in range(rows):
+        for c in range(cols):
+            i = r * cols + c
+            ccx, ccy = x + cw * (c + 0.5), y + head + ch * (r + 0.5)
+            fill = mark_fill if i in marks else "none"
+            cells += circle(ccx, ccy, min(cw, ch) * 0.26, fill,
+                            ink=INK if i in marks else "#B9B4A8", sw=STROKE - 4)
+    return frame + bar + cells
+
+
+def arrow(x0, y0, x1, y1, bend=0.0, color=INK, width=None):
+    import math
+    width = width or STROKE
+    mx, my = (x0 + x1) / 2, (y0 + y1) / 2
+    dx, dy = x1 - x0, y1 - y0
+    cx, cy = mx - dy * bend, my + dx * bend
+    a = math.atan2(y1 - cy, x1 - cx)
+    head = width * 3.4
+    tip = (f'<path d="M {x1} {y1} L {x1 - head * math.cos(a - 0.42):.1f} '
+           f'{y1 - head * math.sin(a - 0.42):.1f} M {x1} {y1} '
+           f'L {x1 - head * math.cos(a + 0.42):.1f} {y1 - head * math.sin(a + 0.42):.1f}" '
+           f'fill="none" stroke="{color}" stroke-width="{width}" stroke-linecap="round"/>')
+    return (f'<path d="M {x0} {y0} Q {cx:.1f} {cy:.1f} {x1} {y1}" fill="none" '
+            f'stroke="{color}" stroke-width="{width}" stroke-linecap="round"/>' + tip)
+
+
+def door(cx, ground_y, w=320, h=560, fill=WHITE, dash=None):
+    x, y = cx - w / 2, ground_y - h
+    rr = w * 0.30
+    panel = shape(
+        f"M {x} {ground_y} L {x} {y + rr} Q {x} {y} {x + rr} {y} "
+        f"L {x + w - rr} {y} Q {x + w} {y} {x + w} {y + rr} "
+        f"L {x + w} {ground_y} Z", fill=fill, dash=dash)
+    knob = circle(x + w * 0.82, ground_y - h * 0.44, w * 0.055, INK, ink=None)
+    return panel + knob
+
+
+def eye(cx, cy, w=170, open_k=1.0):
+    """Открытый или прикрытый глаз — «смотреть» и «не смотреть» в одном знаке."""
+    h = w * 0.52 * max(0.04, open_k)
+    lid = (f'<path d="M {cx - w / 2} {cy} Q {cx} {cy - h} {cx + w / 2} {cy} '
+           f'Q {cx} {cy + h} {cx - w / 2} {cy} Z" fill="{WHITE}" stroke="{INK}" '
+           f'stroke-width="{STROKE}" stroke-linejoin="round"/>')
+    pupil = circle(cx, cy, w * 0.13, INK, ink=None) if open_k > 0.35 else ""
+    return lid + pupil
+
+
+def pile(cx, ground_y, n=4, w=260, step=None):
+    """Стопка нераспечатанного — растёт вверх со сдвигом, как настоящая.
+
+    Нижний конверт ложится на линию земли целиком: смещение считается от его
+    половины высоты, иначе стопка проваливается под пол.
+    """
+    h = w * 0.66
+    step = step or h * 0.42
+    return "".join(
+        envelope(cx + (i % 2 - 0.5) * step * 0.7, ground_y - h / 2 - step * i, w)
+        for i in range(n))
