@@ -1,0 +1,499 @@
+/* «Голый берег» — интерфейс выживания под одну руку на iPhone 12.
+
+   Шрифты системные намеренно: игра должна открываться без сети, а веб-шрифт
+   это всегда запрос наружу. Цвета — земля, ржавчина и кость. */
+:root {
+  --ink: #111310;
+  --ink-2: #1a1d17;
+  --ink-3: #242820;
+  --edge: #3a4031;
+  --bone: #e8e0ce;
+  --dim: #9a9484;
+  --rust: #c4622d;
+  --blood: #b33a2b;
+  --hp: #7d9a4e;
+  --food: #c08a3e;
+  --water: #4e86a8;
+  --ui: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--ink);
+  color: var(--bone);
+  font-family: var(--ui);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  -webkit-user-select: none;
+  user-select: none;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+#gl {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.hud { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
+.hud > * { pointer-events: auto; }
+
+/* ── Состояние игрока ───────────────────────────────────────────────────── */
+.vitals {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top));
+  left: calc(12px + env(safe-area-inset-left));
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  pointer-events: none;
+}
+
+.bar {
+  width: 124px;
+  height: 13px;
+  border: 1px solid rgba(0, 0, 0, 0.55);
+  background: rgba(10, 12, 9, 0.62);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  transition: transform 180ms linear;
+}
+
+.bar span {
+  position: absolute;
+  inset: 0;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 13px;
+  padding-left: 6px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.bar.hp i { background: var(--hp); }
+.bar.food i { background: var(--food); }
+.bar.water i { background: var(--water); }
+
+.clock {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--bone);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+.clock b { color: var(--rust); }
+
+/* ── Ресурсы ────────────────────────────────────────────────────────────── */
+.pack {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top));
+  right: calc(12px + env(safe-area-inset-right));
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: right;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+.pack i { color: var(--dim); font-style: normal; }
+.pack b { font-variant-numeric: tabular-nums; }
+
+/* ── Кнопки интерфейса ──────────────────────────────────────────────────── */
+.top-btns {
+  position: absolute;
+  top: calc(74px + env(safe-area-inset-top));
+  right: calc(12px + env(safe-area-inset-right));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ui-btn {
+  appearance: none;
+  border: 1px solid var(--edge);
+  background: rgba(20, 23, 18, 0.8);
+  color: var(--bone);
+  border-radius: 3px;
+  padding: 9px 12px;
+  font-family: var(--ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  touch-action: manipulation;
+}
+.ui-btn:active { background: rgba(196, 98, 45, 0.35); }
+.ui-btn.on { border-color: var(--rust); color: var(--rust); }
+.ui-btn:focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; }
+
+/* ── Прицел и подсказка о цели ──────────────────────────────────────────── */
+.cross {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  pointer-events: none;
+}
+.cross::before, .cross::after {
+  content: "";
+  position: absolute;
+  background: rgba(232, 224, 206, 0.8);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.9);
+}
+.cross::before { left: 50%; top: 0; width: 1.5px; height: 100%; margin-left: -0.75px; }
+.cross::after { top: 50%; left: 0; height: 1.5px; width: 100%; margin-top: -0.75px; }
+.cross.hit::before, .cross.hit::after { background: var(--blood); }
+
+.target {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 26px);
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.target em { display: block; font-style: normal; font-size: 10px; color: var(--dim); }
+.target .tbar {
+  width: 86px;
+  height: 4px;
+  margin: 4px auto 0;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.target .tbar i { display: block; height: 100%; background: var(--rust); transform-origin: left; }
+
+/* ── Управление ─────────────────────────────────────────────────────────── */
+.stick {
+  position: absolute;
+  left: calc(26px + env(safe-area-inset-left));
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  width: 118px;
+  height: 118px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(232, 224, 206, 0.22);
+  background: rgba(10, 12, 9, 0.28);
+  opacity: 0.55;
+  touch-action: none;
+  pointer-events: none;   /* стик только рисуется, палец ловит слой под ним */
+}
+.stick b {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 52px;
+  height: 52px;
+  margin: -26px 0 0 -26px;
+  border-radius: 50%;
+  background: rgba(232, 224, 206, 0.34);
+  border: 1px solid rgba(232, 224, 206, 0.4);
+}
+
+.action {
+  position: absolute;
+  right: calc(20px + env(safe-area-inset-right));
+  bottom: calc(104px + env(safe-area-inset-bottom));
+  width: 98px;
+  height: 98px;
+  border-radius: 50%;
+  border: 2px solid rgba(196, 98, 45, 0.75);
+  background: rgba(196, 98, 45, 0.22);
+  color: var(--bone);
+  font-family: var(--ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  touch-action: none;
+}
+.action:active, .action.held { background: rgba(196, 98, 45, 0.55); }
+
+.side-btn {
+  position: absolute;
+  right: calc(132px + env(safe-area-inset-right));
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(232, 224, 206, 0.3);
+  background: rgba(10, 12, 9, 0.4);
+  color: var(--bone);
+  font-family: var(--ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  touch-action: none;
+}
+.side-btn:active { background: rgba(232, 224, 206, 0.22); }
+.jump { bottom: calc(176px + env(safe-area-inset-bottom)); }
+.use { bottom: calc(104px + env(safe-area-inset-bottom)); }
+
+/* ── Хотбар ─────────────────────────────────────────────────────────────── */
+.hotbar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  display: flex;
+  gap: 5px;
+}
+
+.slot {
+  width: 50px;
+  height: 50px;
+  border: 1px solid var(--edge);
+  background: rgba(16, 19, 14, 0.82);
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--bone);
+  font-family: var(--ui);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  text-align: center;
+  padding: 2px;
+  touch-action: manipulation;
+}
+.slot.on { border-color: var(--rust); background: rgba(196, 98, 45, 0.25); }
+.slot u { font-size: 17px; text-decoration: none; }
+.slot em { font-style: normal; font-size: 8px; color: var(--dim); }
+
+/* ── Сообщения ──────────────────────────────────────────────────────────── */
+.toasts {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: calc(96px + env(safe-area-inset-top));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.toast {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 2px;
+  background: rgba(10, 12, 9, 0.7);
+  border-left: 2px solid var(--rust);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  animation: toast 2.6s ease forwards;
+}
+.toast.bad { border-left-color: var(--blood); }
+
+@keyframes toast {
+  0% { opacity: 0; transform: translateY(-6px); }
+  10%, 70% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(-8px); }
+}
+
+.hurt {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: radial-gradient(120% 100% at 50% 50%, transparent 45%, rgba(150, 26, 18, 0.75) 100%);
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+
+/* ── Экраны ─────────────────────────────────────────────────────────────── */
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: calc(28px + env(safe-area-inset-top)) 22px calc(28px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(11, 13, 10, 0.95), rgba(11, 13, 10, 0.99));
+  overflow-y: auto;
+  touch-action: pan-y;
+}
+.screen[hidden] { display: none !important; }
+.screen.center { justify-content: center; }
+
+.eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--rust);
+}
+
+h1.title {
+  margin: 4px 0 0;
+  font-size: clamp(38px, 13vw, 54px);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.lede { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--dim); max-width: 36ch; }
+
+.big-btn {
+  appearance: none;
+  border: 0;
+  border-radius: 3px;
+  padding: 16px;
+  background: var(--rust);
+  color: #120c07;
+  font-family: var(--ui);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  touch-action: manipulation;
+}
+.big-btn.ghost { background: transparent; color: var(--bone); border: 1px solid var(--edge); }
+.big-btn:active { transform: translateY(1px); }
+
+.col { display: flex; flex-direction: column; gap: 9px; }
+
+/* Список крафта: строка — рецепт, справа цена, слева что даёт. */
+.recipes { display: flex; flex-direction: column; gap: 0; }
+
+.recipe {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 4px;
+  border-bottom: 1px solid var(--ink-3);
+  background: none;
+  border-left: 0; border-right: 0; border-top: 0;
+  color: var(--bone);
+  font-family: var(--ui);
+  text-align: left;
+  width: 100%;
+  touch-action: manipulation;
+}
+.recipe:first-child { border-top: 1px solid var(--ink-3); }
+.recipe u { font-size: 21px; text-decoration: none; }
+.recipe b { display: block; font-size: 14px; font-weight: 700; }
+.recipe em { display: block; font-style: normal; font-size: 11px; color: var(--dim); line-height: 1.35; }
+.recipe s {
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  max-width: 42vw;          /* длинный рецепт переносится, а не душит название */
+  color: var(--dim);
+}
+.recipe.can s { color: var(--hp); }
+.recipe.cant { opacity: 0.45; }
+.recipe.cant s { color: var(--blood); }
+.recipe:active { background: rgba(196, 98, 45, 0.18); }
+
+.tabs { display: flex; gap: 6px; }
+.tab {
+  flex: 1;
+  appearance: none;
+  border: 1px solid var(--edge);
+  background: transparent;
+  color: var(--dim);
+  border-radius: 3px;
+  padding: 9px 4px;
+  font-family: var(--ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  touch-action: manipulation;
+}
+.tab.on { border-color: var(--rust); color: var(--rust); background: rgba(196, 98, 45, 0.12); }
+
+.stats { display: flex; flex-direction: column; }
+.stats div {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ink-3);
+  font-size: 13px;
+}
+.stats dt { color: var(--dim); }
+.stats dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.hint-rows { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.hint-rows li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; font-size: 13.5px; line-height: 1.4; }
+.hint-rows u { text-decoration: none; }
+.hint-rows span { color: var(--dim); }
+.hint-rows b { color: var(--bone); font-weight: 700; }
+
+.foot { font-size: 11px; line-height: 1.6; color: #6c6a5c; margin: 0; }
+
+/* Строительная панель поверх обычного HUD. */
+.buildbar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: min(340px, calc(100vw - 28px));
+  gap: 4px;
+  padding: 5px;
+  background: rgba(10, 12, 9, 0.7);
+  border: 1px solid var(--edge);
+  border-radius: 4px;
+}
+.buildbar[hidden] { display: none !important; }
+.buildbar button {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--dim);
+  border-radius: 2px;
+  padding: 7px 9px;
+  font-family: var(--ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  touch-action: manipulation;
+}
+.buildbar button.on { border-color: var(--rust); color: var(--rust); background: rgba(196, 98, 45, 0.18); }
+
+@media (max-height: 700px) {
+  .stick { width: 100px; height: 100px; bottom: calc(80px + env(safe-area-inset-bottom)); }
+  .action { width: 84px; height: 84px; }
+  .slot { width: 44px; height: 44px; }
+}

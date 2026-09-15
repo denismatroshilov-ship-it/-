@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Голый берег</title>
+<meta name="description" content="Офлайн-выживание от первого лица на острове: собрать, скрафтить, построить и дожить до утра.">
+<meta name="theme-color" content="#111310">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Голый берег">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="touch" style="position:fixed;inset:0;z-index:1;touch-action:none"></div>
+<div class="hud" id="hud"></div>
+<div class="hurt" id="hurt"></div>
+
+<section class="screen center" id="start">
+  <div>
+    <p class="eyebrow">Выживание · офлайн · один палец</p>
+    <h1 class="title">Голый<br>берег</h1>
+  </div>
+  <p class="lede">Ты очнулся на берегу с камнем в руках. До темноты нужно собрать дерево, сделать топор и развести костёр — ночью на острове ты не один.</p>
+  <div class="col">
+    <button class="big-btn" id="btnContinue" type="button" hidden>Продолжить</button>
+    <button class="big-btn" id="btnNew" type="button">Новый остров</button>
+    <button class="big-btn ghost" id="btnHelp" type="button">Как играть</button>
+  </div>
+  <p class="foot">Игра целиком работает без сети. Чтобы запускать её как приложение: Поделиться → «На экран „Домой“».</p>
+</section>
+
+<section class="screen" id="help" hidden>
+  <div>
+    <p class="eyebrow">Управление</p>
+    <h1 class="title">Как играть</h1>
+  </div>
+  <ul class="hint-rows">
+    <li><u>🕹</u><span><b>Левая половина экрана</b> — движение. Толкни палец до упора, чтобы бежать.</span></li>
+    <li><u>👆</u><span><b>Правая половина</b> — осмотреться: веди пальцем.</span></li>
+    <li><u>✊</u><span><b>УДАР</b> — рубить, копать, бить. Держи кнопку, удары идут сами.</span></li>
+    <li><u>✋</u><span><b>ВЗЯТЬ</b> — пить у родника, есть, открывать дверь, подбрасывать дрова, подбирать мешок.</span></li>
+    <li><u>🎒</u><span><b>Нижний ряд</b> — инструменты. Камень, топор, кирка, копьё, лук, план стройки.</span></li>
+  </ul>
+  <ul class="hint-rows">
+    <li><u>🪓</u><span>Топор — <b>дерево</b>, кирка — <b>камень и руда</b>. Без инструмента всё идёт втрое дольше.</span></li>
+    <li><u>💧</u><span>Морская вода не годится. Пресная — только в <b>родниках</b> на острове.</span></li>
+    <li><u>🔥</u><span>У костра жарят мясо, плавят руду и греются. Ночью без огня <b>мёрзнешь</b>.</span></li>
+    <li><u>🏚</u><span>С планом стройки ставь фундамент, стены и дверь. Стены держат мародёров — но не вечно.</span></li>
+    <li><u>🛏</u><span>Спальник — точка возрождения. Без него очнёшься снова на берегу.</span></li>
+    <li><u>🌙</u><span>Каждую ночь от антенны идут мародёры. С каждым днём их больше.</span></li>
+  </ul>
+  <button class="big-btn ghost" id="btnHelpBack" type="button">Назад</button>
+  <p class="foot">Игра сохраняется сама каждые 20 секунд и при выходе в меню.</p>
+</section>
+
+<section class="screen" id="craft" hidden>
+  <div>
+    <p class="eyebrow">Верстак не нужен</p>
+    <h1 class="title">Крафт</h1>
+  </div>
+  <div class="tabs">
+    <button class="tab on" data-tab="tools" type="button">Инструменты</button>
+    <button class="tab" data-tab="supply" type="button">Припасы</button>
+  </div>
+  <div class="recipes" id="recipes"></div>
+  <button class="big-btn" id="btnCraftClose" type="button">Закрыть</button>
+</section>
+
+<section class="screen center" id="menu" hidden>
+  <div>
+    <p class="eyebrow">Пауза</p>
+    <h1 class="title">Остров<br>подождёт</h1>
+  </div>
+  <div class="col">
+    <button class="big-btn" id="btnResume" type="button">Продолжить</button>
+    <button class="big-btn ghost" id="btnSave" type="button">Сохранить</button>
+    <button class="big-btn ghost" id="btnMenuHelp" type="button">Как играть</button>
+    <button class="big-btn ghost" id="btnQuit" type="button">Выйти в меню</button>
+  </div>
+</section>
+
+<section class="screen center" id="dead" hidden>
+  <div>
+    <p class="eyebrow">Ты умер</p>
+    <h1 class="title">Остров<br>не заметил</h1>
+  </div>
+  <dl class="stats">
+    <div><dt>Прожито дней</dt><dd id="deadDay">1</dd></div>
+    <div><dt>Лучший результат</dt><dd id="deadBest">1</dd></div>
+    <div><dt>Смертей</dt><dd id="deadDeaths">1</dd></div>
+  </dl>
+  <p class="lede" id="deadBag"></p>
+  <button class="big-btn" id="btnRespawn" type="button">Очнуться</button>
+</section>
+
+<script src="gl.js"></script>
+<script src="world.js"></script>
+<script src="game.js"></script>
+<script>
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  }
+</script>
+</body>
+</html>
