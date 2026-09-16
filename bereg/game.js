@@ -375,11 +375,14 @@ const Game = (() => {
     const surface = $("touch");
     surface.addEventListener("pointerdown", (e) => {
       if (state.mode !== "play") return;
-      // Мышь на компьютере: зажатая кнопка бьёт, движение крутит камеру.
+      // Мышь на компьютере: левая кнопка бьёт, правая зажатая — обзор.
+      // Захват курсора не годится: с ним перестают нажиматься кнопки HUD.
       if (e.pointerType === "mouse") {
-        input.action = true;
-        input.lookId = e.pointerId;
-        input.look.x = e.clientX; input.look.y = e.clientY;
+        if (e.button === 0) input.action = true;
+        else {
+          input.lookId = e.pointerId;
+          input.look.x = e.clientX; input.look.y = e.clientY;
+        }
         try { surface.setPointerCapture(e.pointerId); } catch (err) { /* мышь уже отпущена */ }
         return;
       }
@@ -422,6 +425,8 @@ const Game = (() => {
     hold($("btnAction"), () => { input.action = true; }, () => { input.action = false; });
     hold($("btnJump"), () => { input.jump = true; }, () => { input.jump = false; });
     $("btnUse").addEventListener("pointerdown", (e) => { e.preventDefault(); useAction(); });
+
+    surface.addEventListener("contextmenu", (e) => e.preventDefault());
 
     document.addEventListener("keydown", (e) => {
       input.keys[e.code] = true;
@@ -1372,6 +1377,7 @@ const Game = (() => {
   }
 
   function showScreen(id) {
+    input.action = false;
     for (const s of document.querySelectorAll(".screen")) s.hidden = s.id !== id;
     if (id === "craft") renderCraft();
   }
