@@ -380,7 +380,7 @@ const Game = (() => {
         input.action = true;
         input.lookId = e.pointerId;
         input.look.x = e.clientX; input.look.y = e.clientY;
-        surface.setPointerCapture(e.pointerId);
+        try { surface.setPointerCapture(e.pointerId); } catch (err) { /* мышь уже отпущена */ }
         return;
       }
       const leftZone = e.clientX < window.innerWidth * 0.46 && e.clientY > window.innerHeight * 0.42;
@@ -390,7 +390,7 @@ const Game = (() => {
         input.lookId = e.pointerId;
         input.look.x = e.clientX; input.look.y = e.clientY;
       }
-      surface.setPointerCapture(e.pointerId);
+      try { surface.setPointerCapture(e.pointerId); } catch (err) { /* палец уже отпущен */ }
     });
 
     surface.addEventListener("pointermove", (e) => {
@@ -953,6 +953,10 @@ const Game = (() => {
       return;
     }
 
+    // Пауза после любой постановки: иначе зажатая кнопка ставит по костру
+    // в кадр и выносит все припасы за секунду.
+    P.swing = 0.45;
+
     if (b.id === "upgrade") {
       const p = state.aimTarget.piece;
       pay(b.cost);
@@ -986,7 +990,6 @@ const Game = (() => {
     World.addPiece(b.id, t.gx, t.gz, level, t.edge, "wood");
     rebuildPieces();
     Snd.craft();
-    P.swing = 0.4;
   }
 
   // ── Крафт ───────────────────────────────────────────────────────────────
@@ -1166,7 +1169,7 @@ const Game = (() => {
     const warm = clamp(1 - Math.abs(t / NIGHT_FROM - 0.5) * 2, 0, 1);
     const k = dayness;
     GL.env.sunColor = [0.35 + 0.75 * k, 0.32 + 0.66 * k * (0.7 + 0.3 * warm), 0.30 + 0.5 * k];
-    GL.env.ambient = [0.10 + 0.28 * k, 0.11 + 0.29 * k, 0.16 + 0.28 * k];
+    GL.env.ambient = [0.13 + 0.25 * k, 0.14 + 0.26 * k, 0.20 + 0.24 * k];
     GL.env.fog = [0.06 + 0.56 * k, 0.08 + 0.62 * k, 0.12 + 0.66 * k];
     GL.env.skyTop = [0.03 + 0.21 * k, 0.05 + 0.40 * k, 0.12 + 0.63 * k];
     GL.env.skyBottom = [0.06 + 0.66 * k * (0.6 + 0.4 * (1 - warm)), 0.08 + 0.74 * k, 0.14 + 0.76 * k];
@@ -1513,4 +1516,9 @@ const Game = (() => {
   return { init, state, P, save, load, newGame };
 })();
 
-window.addEventListener("DOMContentLoaded", () => Game.init());
+// Скрипт может подключаться и после разбора страницы — тогда ждать уже нечего.
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", () => Game.init());
+} else {
+  Game.init();
+}

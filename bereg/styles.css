@@ -460,15 +460,15 @@ h1.title {
 .foot { font-size: 11px; line-height: 1.6; color: #6c6a5c; margin: 0; }
 
 /* Строительная панель поверх обычного HUD. */
+/* Панель стройки живёт слева над стиком: по центру она перекрывала бы
+   кнопки прыжка и «взять». */
 .buildbar {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(76px + env(safe-area-inset-bottom));
+  left: calc(10px + env(safe-area-inset-left));
+  bottom: calc(226px + env(safe-area-inset-bottom));
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  max-width: min(340px, calc(100vw - 28px));
+  width: 152px;
   gap: 4px;
   padding: 5px;
   background: rgba(10, 12, 9, 0.7);
@@ -478,11 +478,12 @@ h1.title {
 .buildbar[hidden] { display: none !important; }
 .buildbar button {
   appearance: none;
+  width: 68px;
   border: 1px solid transparent;
   background: transparent;
   color: var(--dim);
   border-radius: 2px;
-  padding: 7px 9px;
+  padding: 7px 4px;
   font-family: var(--ui);
   font-size: 10px;
   font-weight: 700;
