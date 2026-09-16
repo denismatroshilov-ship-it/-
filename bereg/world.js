@@ -140,6 +140,21 @@ const World = (() => {
     GL.box(g, 0.4, 0.3, 0.4, [0.66, 0.46, 0.25], -0.4, 0.8, -0.3);
     M.ore = GL.mesh(g);
 
+    // Серная руда — жёлтые вкрапления, видно издалека, как в оригинале.
+    g = GL.geo();
+    GL.sphere(g, 1.15, 7, [0.40, 0.38, 0.32], 0.4, 0.75);
+    GL.box(g, 0.45, 0.4, 0.45, [0.86, 0.76, 0.18], 0.45, 0.9, 0.25);
+    GL.box(g, 0.35, 0.3, 0.35, [0.78, 0.68, 0.16], -0.4, 0.8, -0.3);
+    GL.box(g, 0.3, 0.25, 0.3, [0.90, 0.80, 0.22], 0.05, 1.25, -0.1);
+    M.sulfurNode = GL.mesh(g);
+
+    // Руда ВКМ — редкая, тёмная с синим отливом, только высоко в горах.
+    g = GL.geo();
+    GL.sphere(g, 1.0, 7, [0.30, 0.31, 0.34], 0.35, 0.8);
+    GL.box(g, 0.4, 0.35, 0.4, [0.36, 0.48, 0.62], 0.35, 0.8, 0.2);
+    GL.box(g, 0.32, 0.28, 0.32, [0.44, 0.58, 0.72], -0.35, 0.7, -0.25);
+    M.hqmNode = GL.mesh(g);
+
     g = GL.geo();
     GL.sphere(g, 0.75, 6, [0.22, 0.36, 0.18], 0.35, 0.8);
     GL.sphere(g, 0.16, 5, [0.62, 0.14, 0.18], 0.85, 1);
@@ -198,6 +213,72 @@ const World = (() => {
     GL.box(g, 1.9, 0.25, 0.9, [0.30, 0.38, 0.55]);
     GL.box(g, 0.5, 0.18, 0.8, [0.42, 0.48, 0.62], 0.6, 0.2, 0);
     M.bag = GL.mesh(g);
+
+    // ── Всё, что игрок ставит на базе ──
+    g = GL.geo();
+    GL.box(g, 1.3, 1.25, 1.1, [0.46, 0.44, 0.42]);
+    GL.box(g, 0.55, 0.5, 0.12, [0.16, 0.12, 0.10], 0, 0.18, 0.55);   // топка
+    GL.box(g, 0.9, 0.12, 0.9, [0.38, 0.36, 0.35], 0, 1.25, 0);
+    M.furnace = GL.mesh(g);
+
+    g = GL.geo();
+    GL.box(g, 2.4, 2.1, 1.8, [0.44, 0.42, 0.40]);
+    GL.box(g, 1.0, 0.7, 0.14, [0.16, 0.12, 0.10], 0, 0.25, 0.9);
+    GL.cylinder(g, 0.28, 0.24, 0.9, 6, [0.36, 0.34, 0.33], 2.1);
+    M.furnaceLarge = GL.mesh(g);
+
+    const bench = (top, legs, extra) => {
+      const b = GL.geo();
+      GL.box(b, 1.9, 0.14, 1.0, top, 0, 0.92, 0);
+      for (const [dx, dz] of [[-0.8, -0.4], [0.8, -0.4], [-0.8, 0.4], [0.8, 0.4]]) {
+        GL.box(b, 0.12, 0.92, 0.12, legs, dx, 0, dz);
+      }
+      if (extra) extra(b);
+      return GL.mesh(b);
+    };
+    M.wb1 = bench([0.52, 0.40, 0.24], [0.40, 0.30, 0.19], (b) => {
+      GL.box(b, 0.4, 0.22, 0.3, [0.35, 0.34, 0.33], 0.6, 1.06, 0);
+    });
+    M.wb2 = bench([0.46, 0.46, 0.48], [0.33, 0.33, 0.35], (b) => {
+      GL.box(b, 0.5, 0.3, 0.4, [0.55, 0.52, 0.48], -0.55, 1.06, 0);
+      GL.cylinder(b, 0.09, 0.09, 0.5, 6, [0.62, 0.60, 0.56], 1.06, 0);
+    });
+    M.wb3 = bench([0.38, 0.44, 0.52], [0.30, 0.34, 0.40], (b) => {
+      GL.box(b, 0.7, 0.45, 0.5, [0.32, 0.46, 0.58], -0.5, 1.06, 0);
+      GL.box(b, 0.5, 0.35, 0.08, [0.45, 0.72, 0.85], 0.55, 1.12, 0);
+    });
+
+    g = GL.geo();
+    GL.box(g, 1.0, 0.8, 0.8, [0.48, 0.36, 0.22]);
+    GL.box(g, 1.04, 0.1, 0.84, [0.32, 0.28, 0.24], 0, 0.8, 0);
+    M.box = GL.mesh(g);
+
+    g = GL.geo();
+    GL.box(g, 1.7, 1.0, 1.0, [0.46, 0.35, 0.22]);
+    GL.box(g, 1.74, 0.12, 1.04, [0.36, 0.36, 0.38], 0, 1.0, 0);
+    GL.box(g, 0.2, 0.2, 0.12, [0.62, 0.60, 0.56], 0, 0.55, 0.52);
+    M.largeBox = GL.mesh(g);
+
+    g = GL.geo();
+    GL.box(g, 1.6, 0.16, 1.0, [0.40, 0.38, 0.36], 0, 0.9, 0);
+    for (const [dx, dz] of [[-0.65, -0.35], [0.65, -0.35], [-0.65, 0.35], [0.65, 0.35]]) {
+      GL.box(g, 0.1, 0.9, 0.1, [0.32, 0.30, 0.29], dx, 0, dz);
+    }
+    GL.box(g, 0.7, 0.55, 0.5, [0.30, 0.42, 0.48], 0.3, 1.06, 0);
+    GL.box(g, 0.45, 0.35, 0.06, [0.55, 0.85, 0.80], 0.3, 1.16, 0.26);
+    M.research = GL.mesh(g);
+
+    g = GL.geo();
+    GL.box(g, 1.2, 1.5, 1.0, [0.42, 0.33, 0.20]);
+    GL.box(g, 1.26, 0.14, 1.06, [0.30, 0.28, 0.26], 0, 1.5, 0);
+    GL.box(g, 0.3, 0.3, 0.1, [0.72, 0.58, 0.22], 0, 0.9, 0.5);
+    M.tc = GL.mesh(g);
+
+    g = GL.geo();
+    GL.box(g, 1.4, 2.2, 1.2, [0.40, 0.42, 0.44]);
+    GL.box(g, 1.0, 0.5, 0.2, [0.28, 0.30, 0.32], 0, 1.7, 0.6);
+    GL.box(g, 0.5, 0.25, 0.15, [0.75, 0.55, 0.20], 0, 0.5, 0.6);
+    M.recycler = GL.mesh(g);
 
     g = GL.geo();
     GL.box(g, 0.6, 0.5, 0.45, [0.42, 0.34, 0.22]);
@@ -264,7 +345,9 @@ const World = (() => {
     pine: { mesh: "pine", hp: 120, give: "wood", amount: 26, tool: "axe", radius: 0.5, respawn: 200 },
     oak: { mesh: "oak", hp: 140, give: "wood", amount: 30, tool: "axe", radius: 0.55, respawn: 220 },
     rock: { mesh: "rock", hp: 130, give: "stone", amount: 24, tool: "pick", radius: 0.9, respawn: 220 },
-    ore: { mesh: "ore", hp: 160, give: "ore", amount: 12, tool: "pick", radius: 0.9, respawn: 300 },
+    ore: { mesh: "ore", hp: 160, give: "metalOre", amount: 14, tool: "pick", radius: 0.9, respawn: 300 },
+    sulfur: { mesh: "sulfurNode", hp: 160, give: "sulfurOre", amount: 12, tool: "pick", radius: 0.9, respawn: 330 },
+    hqmNode: { mesh: "hqmNode", hp: 200, give: "hqmOre", amount: 4, tool: "pick", radius: 0.8, respawn: 420 },
     bush: { mesh: "bush", hp: 20, give: "berries", amount: 4, tool: "any", radius: 0.5, respawn: 120 },
     hemp: { mesh: "hemp", hp: 22, give: "cloth", amount: 8, tool: "any", radius: 0.4, respawn: 150 },
     barrel: { mesh: "barrel", hp: 40, give: "loot", amount: 1, tool: "any", radius: 0.5, respawn: 240 },
@@ -305,6 +388,8 @@ const World = (() => {
     scatter(rng, "oak", 140, (x, z, y) => land(x, z, y) && y > 2 && y < 18);
     scatter(rng, "rock", 150, (x, z, y) => y > 0.8 && slope(x, z) < 0.9);
     scatter(rng, "ore", 60, (x, z, y) => y > 5 && slope(x, z) < 1.1);
+    scatter(rng, "sulfur", 45, (x, z, y) => y > 6 && slope(x, z) < 1.1);
+    scatter(rng, "hqmNode", 24, (x, z, y) => y > 11 && slope(x, z) < 1.3);
     scatter(rng, "bush", 70, (x, z, y) => land(x, z, y) && y < 16);
     scatter(rng, "hemp", 85, (x, z, y) => y > 1.6 && y < 12 && slope(x, z) < 0.45);
 
@@ -383,7 +468,7 @@ const World = (() => {
 
   // ── Постройки ───────────────────────────────────────────────────────────
   const pieces = [];
-  const PIECE_HP = { wood: 250, stone: 500 };
+  const PIECE_HP = { wood: 250, stone: 500, metal: 1000, armored: 2000 };
 
   function snap(v) { return Math.round(v / GRID) * GRID; }
 

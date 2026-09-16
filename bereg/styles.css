@@ -262,12 +262,12 @@ html, body {
   transform: translateX(-50%);
   bottom: calc(14px + env(safe-area-inset-bottom));
   display: flex;
-  gap: 5px;
+  gap: 3px;
 }
 
 .slot {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 44px;
   border: 1px solid var(--edge);
   background: rgba(16, 19, 14, 0.82);
   border-radius: 3px;
@@ -287,7 +287,7 @@ html, body {
   touch-action: manipulation;
 }
 .slot.on { border-color: var(--rust); background: rgba(196, 98, 45, 0.25); }
-.slot u { font-size: 17px; text-decoration: none; }
+.slot u { font-size: 16px; text-decoration: none; line-height: 1; }
 .slot em { font-style: normal; font-size: 8px; color: var(--dim); }
 
 /* ── Сообщения ──────────────────────────────────────────────────────────── */
@@ -496,5 +496,64 @@ h1.title {
 @media (max-height: 700px) {
   .stick { width: 100px; height: 100px; bottom: calc(80px + env(safe-area-inset-bottom)); }
   .action { width: 84px; height: 84px; }
-  .slot { width: 44px; height: 44px; }
+  .slot { width: 36px; height: 40px; }
 }
+
+/* ── Добавлено вместе с экономикой: печь, ящики, технологии ─────────────── */
+.eyebrow.off { color: var(--dim); }
+.clock .warn { color: var(--blood); }
+.bar.hp.bleeding { border-color: var(--blood); box-shadow: 0 0 0 1px rgba(179, 58, 43, 0.6); }
+
+.recipe b .wb {
+  font-style: normal;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border: 1px solid var(--edge);
+  border-radius: 2px;
+  padding: 1px 4px;
+  margin-left: 6px;
+  color: var(--dim);
+  vertical-align: middle;
+}
+.recipe.known { opacity: 0.6; }
+.recipe.known s { color: var(--hp); }
+
+h3.branch {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rust);
+  margin: 18px 0 2px;
+}
+
+.state { display: flex; flex-direction: column; }
+.srow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--ink-3);
+  font-size: 13.5px;
+}
+.srow i { font-style: normal; color: var(--dim); min-width: 108px; }
+.srow b { font-weight: 700; flex: 1; }
+.srow.store b { flex: none; min-width: 42px; text-align: right; font-variant-numeric: tabular-nums; }
+
+.mini {
+  appearance: none;
+  border: 1px solid var(--edge);
+  background: transparent;
+  color: var(--bone);
+  border-radius: 2px;
+  padding: 6px 8px;
+  font-family: var(--ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  touch-action: manipulation;
+}
+.mini:disabled { opacity: 0.3; }
+.mini:active { background: rgba(196, 98, 45, 0.25); }

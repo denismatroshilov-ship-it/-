@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Голый берег</title>
-<meta name="description" content="Офлайн-выживание от первого лица на острове: собрать, скрафтить, построить и дожить до утра.">
+<meta name="description" content="Офлайн-выживание от первого лица: добыча, плавка, верстаки, чертежи, стройка и ночные рейды.">
 <meta name="theme-color" content="#111310">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -26,13 +26,13 @@
     <p class="eyebrow">Выживание · офлайн · один палец</p>
     <h1 class="title">Голый<br>берег</h1>
   </div>
-  <p class="lede">Ты очнулся на берегу с камнем в руках. До темноты нужно собрать дерево, сделать топор и развести костёр — ночью на острове ты не один.</p>
+  <p class="lede">Ты очнулся на берегу с камнем в руках. Добыча, плавка, верстак, чертежи, база и ночь, в которую приходят за твоим ломом.</p>
   <div class="col">
     <button class="big-btn" id="btnContinue" type="button" hidden>Продолжить</button>
     <button class="big-btn" id="btnNew" type="button">Новый остров</button>
     <button class="big-btn ghost" id="btnHelp" type="button">Как играть</button>
   </div>
-  <p class="foot">Игра целиком работает без сети. Чтобы запускать её как приложение: Поделиться → «На экран „Домой“».</p>
+  <p class="foot">Работает без сети. Чтобы запускать как приложение: Поделиться → «На экран „Домой“».</p>
 </section>
 
 <section class="screen" id="help" hidden>
@@ -41,37 +41,91 @@
     <h1 class="title">Как играть</h1>
   </div>
   <ul class="hint-rows">
-    <li><u>🕹</u><span><b>Левая половина экрана</b> — движение. Толкни палец до упора, чтобы бежать.</span></li>
-    <li><u>👆</u><span><b>Правая половина</b> — осмотреться: веди пальцем.</span></li>
-    <li><u>✊</u><span><b>УДАР</b> — рубить, копать, бить. Держи кнопку, удары идут сами.</span></li>
-    <li><u>✋</u><span><b>ВЗЯТЬ</b> — пить у родника, есть, открывать дверь, подбрасывать дрова, подбирать мешок.</span></li>
-    <li><u>🎒</u><span><b>Нижний ряд</b> — инструменты. Камень, топор, кирка, копьё, лук, план стройки.</span></li>
+    <li><u>🕹</u><span><b>Левая половина экрана</b> — движение. Палец до упора — бег.</span></li>
+    <li><u>👆</u><span><b>Правая половина</b> — осмотреться.</span></li>
+    <li><u>✊</u><span><b>УДАР</b> — рубить, копать, бить, стрелять. Держи — бьёт сам.</span></li>
+    <li><u>✋</u><span><b>ВЗЯТЬ</b> — пить, есть, открыть дверь, открыть печь и ящик, подобрать мешок.</span></li>
+    <li><u>🎒</u><span><b>Нижний ряд</b> — пояс на восемь слотов: камень, топор, кирка, копьё, дальнобой, план, молоток, факел.</span></li>
   </ul>
   <ul class="hint-rows">
-    <li><u>🪓</u><span>Топор — <b>дерево</b>, кирка — <b>камень и руда</b>. Без инструмента всё идёт втрое дольше.</span></li>
-    <li><u>💧</u><span>Морская вода не годится. Пресная — только в <b>родниках</b> на острове.</span></li>
-    <li><u>🔥</u><span>У костра жарят мясо, плавят руду и греются. Ночью без огня <b>мёрзнешь</b>.</span></li>
-    <li><u>🏚</u><span>С планом стройки ставь фундамент, стены и дверь. Стены держат мародёров — но не вечно.</span></li>
-    <li><u>🛏</u><span>Спальник — точка возрождения. Без него очнёшься снова на берегу.</span></li>
-    <li><u>🌙</u><span>Каждую ночь от антенны идут мародёры. С каждым днём их больше.</span></li>
+    <li><u>⛏️</u><span>Кирка берёт <b>камень, металл, серу и ВКМ</b>. Сера и ВКМ лежат высоко в горах.</span></li>
+    <li><u>🏭</u><span><b>Печь</b> плавит руду в металл, серу и ВКМ, а дерево — в уголь. Сера плюс уголь — порох.</span></li>
+    <li><u>🧰</u><span><b>Верстаки 1–3</b> открывают рецепты. Крафтить можно, только стоя рядом.</span></li>
+    <li><u>🔬</u><span><b>Чертежи</b> покупаются за лом в «Технологиях» или разбираются на исследовательском столе.</span></li>
+    <li><u>⚙️</u><span><b>Переработчик</b> у антенны превращает шестерни и трубы в лом и металл.</span></li>
+    <li><u>🗄️</u><span><b>Шкаф инструментов</b> платит налог деревом. Пустой шкаф — база ветшает.</span></li>
+    <li><u>🔨</u><span><b>Молотком</b> постройка улучшается: дерево → камень → листовой металл → броня.</span></li>
+    <li><u>🌙</u><span>Каждую ночь идут мародёры, с четвёртого дня — с оружием.</span></li>
   </ul>
   <button class="big-btn ghost" id="btnHelpBack" type="button">Назад</button>
-  <p class="foot">На компьютере: WASD — идти, правая кнопка мыши зажата — осмотреться,
-    левая — удар, E — взять, C — крафт, 1–6 — слоты.<br>
-    Игра сохраняется сама каждые 20 секунд и при выходе в меню.</p>
+  <p class="foot">На компьютере: WASD — идти, правая кнопка мыши — осмотреться, левая — удар,
+    E — взять, C — крафт, T — технологии, 1–8 — слоты.<br>
+    Игра сохраняется сама каждые 20 секунд.</p>
 </section>
 
 <section class="screen" id="craft" hidden>
   <div>
-    <p class="eyebrow">Верстак не нужен</p>
+    <p class="eyebrow" id="craftBench">Верстака рядом нет</p>
     <h1 class="title">Крафт</h1>
   </div>
   <div class="tabs">
     <button class="tab on" data-tab="tools" type="button">Инструменты</button>
+    <button class="tab" data-tab="build" type="button">Постройки</button>
     <button class="tab" data-tab="supply" type="button">Припасы</button>
   </div>
   <div class="recipes" id="recipes"></div>
   <button class="big-btn" id="btnCraftClose" type="button">Закрыть</button>
+</section>
+
+<section class="screen" id="tech" hidden>
+  <div>
+    <p class="eyebrow" id="techBench">Верстака рядом нет</p>
+    <h1 class="title">Технологии</h1>
+  </div>
+  <p class="lede">Чертежи покупаются за лом и открываются по цепочке. Учиться можно только стоя у верстака нужного уровня. Лома в рюкзаке: <b id="techScrap">0</b>.</p>
+  <div class="recipes" id="techList"></div>
+  <button class="big-btn" id="btnTechClose" type="button">Закрыть</button>
+</section>
+
+<section class="screen" id="furnace" hidden>
+  <div>
+    <p class="eyebrow">Плавка</p>
+    <h1 class="title" id="furnaceTitle">Печь</h1>
+  </div>
+  <p class="lede">Топлива осталось на <b id="furnaceFuel">0</b> секунд. Печь работает и пока ты занят другим.</p>
+  <div class="state" id="furnaceState"></div>
+  <div class="col" id="furnaceActions"></div>
+  <button class="big-btn ghost" id="btnFurnaceClose" type="button">Закрыть</button>
+</section>
+
+<section class="screen" id="store" hidden>
+  <div>
+    <p class="eyebrow">Хранилище</p>
+    <h1 class="title" id="storeTitle">Ящик</h1>
+  </div>
+  <p class="lede" id="storeHint"></p>
+  <div class="state" id="storeList"></div>
+  <button class="big-btn ghost" id="btnStoreClose" type="button">Закрыть</button>
+</section>
+
+<section class="screen" id="research" hidden>
+  <div>
+    <p class="eyebrow">Исследовательский стол</p>
+    <h1 class="title">Чертежи</h1>
+  </div>
+  <p class="lede">Собери образец предмета и разбери его на чертёж. Дороже по материалам, чем технологии, зато без верстака.</p>
+  <div class="recipes" id="researchList"></div>
+  <button class="big-btn ghost" id="btnResearchClose" type="button">Закрыть</button>
+</section>
+
+<section class="screen" id="recycler" hidden>
+  <div>
+    <p class="eyebrow">У антенны</p>
+    <h1 class="title">Переработчик</h1>
+  </div>
+  <p class="lede">Компоненты из бочек и ящиков разбираются в лом и материалы.</p>
+  <div class="recipes" id="recyclerList"></div>
+  <button class="big-btn ghost" id="btnRecyclerClose" type="button">Закрыть</button>
 </section>
 
 <section class="screen center" id="menu" hidden>
@@ -102,6 +156,7 @@
 </section>
 
 <script src="gl.js"></script>
+<script src="items.js"></script>
 <script src="world.js"></script>
 <script src="game.js"></script>
 <script>

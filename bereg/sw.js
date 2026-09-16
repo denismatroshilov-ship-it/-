@@ -1,12 +1,13 @@
 /* Оффлайн-кэш «Голого берега». Внешних запросов у игры нет вообще,
    поэтому кэшируем ровно свои файлы — и она работает в самолёте. */
-const CACHE = "bereg-v1";
+const CACHE = "bereg-v2";
 const CORE = [
   "./",
   "index.html",
   "styles.css",
   "gl.js",
   "world.js",
+  "items.js",
   "game.js",
   "manifest.webmanifest",
   "icon-180.png",
